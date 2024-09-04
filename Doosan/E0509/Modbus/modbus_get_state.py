@@ -2,14 +2,14 @@ from pprint import pprint
 from pymodbus.client import ModbusTcpClient
 
 # 로봇의 IP 주소와 Modbus 포트 설정
-robot_ip = '192.168.1.101'  # 두산 로봇의 IP 주소
+robot_ip = '192.168.137.100'  # 두산 로봇의 IP 주소
 modbus_port = 502  # Modbus TCP 기본 포트
 
 # Modbus TCP 클라이언트 생성
 client = ModbusTcpClient(robot_ip, port=modbus_port)
 
 
-
+#wclient.connect()
 # 클라이언트 연결
 if client.connect():
     print("Connected to the robot")
@@ -17,26 +17,26 @@ if client.connect():
 
     # ---------------------------coil-----------------------------------
     # Coil (디지털 출력) 제어 예제: 1번 핀을 HIGH로 설정
-    coil_address = 23  # 제어할 Coil의 주소
+    coil_address = 129  # 제어할 Coil의 주소
     value = True  # HIGH로 설정
 
-    # Coil 제어 (쓰기)
-    result = client.write_coil(coil_address, True)
-    if result.isError():
-        print("Error writing to coil")
-    else:
-        print(f"Successfully wrote to coil {coil_address}, {result}")
+    # # Coil 제어 (쓰기)
+    # result = client.write_coil(coil_address, True)
+    # if result.isError():
+    #    print("Error writing to coil")
+    # else:
+    #    print(f"Successfully wrote to coil {coil_address}, {result}")
 
-    # Coil 읽기 (확인)
-    result = client.read_coils(coil_address, 1)
-    if result.isError():
-        print("Error reading coil")
-    else:
-        print(f"Coil {coil_address} value: {result} {result.bits[0]}")
-    # -------------------------------------------------------------------------------
+    # # Coil 읽기 (확인)
+    # result = client.read_coils(coil_address, 1)
+    # if result.isError():
+    #     print("Error reading coil")
+    # else:
+    #     print(f"Coil {coil_address} value: {result} {result.bits[0]}")
+    # # -------------------------------------------------------------------------------
 
     # Holding Register
-    result = client.read_holding_registers(259)
+    result = client.read_holding_registers(259,1,1)
     if result.isError():
         print("Error writing to holding register")
     else:
@@ -59,7 +59,7 @@ if client.connect():
         print(f"Successfully wrote to holding register : {result}")
     '''
 
-    # 클라이언트 연결 종료
+    # 클라이언트 연결
     client.close()
     print("Connection closed")
 else:
@@ -133,56 +133,56 @@ def robot_init():
             pass
 
 
-# 클라이언트 연결
-if client.connect():
-    print("Connected to the robot")
+# # 클라이언트 연결
+# if client.connect():
+#     print("Connected to the robot")
 
 
-    # ---------------------------coil-----------------------------------
-    # Coil (디지털 출력) 제어 예제: 1번 핀을 HIGH로 설정
-    coil_address = 23  # 제어할 Coil의 주소
-    value = True  # HIGH로 설정
+#     # ---------------------------coil-----------------------------------
+#     # Coil (디지털 출력) 제어 예제: 1번 핀을 HIGH로 설정
+#     coil_address = 23  # 제어할 Coil의 주소
+#     value = True  # HIGH로 설정
 
-    # Coil 제어 (쓰기)
-    result = client.write_coil(coil_address, True)
-    if result.isError():
-        print("Error writing to coil")
-    else:
-        print(f"Successfully wrote to coil {coil_address}, {result}")
+#     # Coil 제어 (쓰기)
+#     result = client.write_coil(coil_address, True)
+#     if result.isError():
+#         print("Error writing to coil")
+#     else:
+#         print(f"Successfully wrote to coil {coil_address}, {result}")
 
-    # Coil 읽기 (확인)
-    result = client.read_coils(coil_address, 1)
-    if result.isError():
-        print("Error reading coil")
-    else:
-        print(f"Coil {coil_address} value: {result} {result.bits[0]}")
-    # -------------------------------------------------------------------------------
+#     # Coil 읽기 (확인)
+#     result = client.read_coils(coil_address, 1)
+#     if result.isError():
+#         print("Error reading coil")
+#     else:
+#         print(f"Coil {coil_address} value: {result} {result.bits[0]}")
+#     # -------------------------------------------------------------------------------
 
-    # Holding Register
-    result = client.read_holding_registers(259)
-    if result.isError():
-        print("Error writing to holding register")
-    else:
-        print(f"Successfully wrote to holding register : {result.registers}")
+#     # Holding Register
+#     result = client.read_holding_registers(259)
+#     if result.isError():
+#         print("Error writing to holding register")
+#     else:
+#         print(f"Successfully wrote to holding register : {result.registers}")
 
-    result = client.read_holding_registers(1)
-    if result.isError():
-        print("Error writing to holding register")
-    else:
-        print(f"Successfully wrote to holding register : {result.registers}")
-        print(f"Successfully digital output 1~16 : {bin(result.registers[0])}")
-        a=format(result.registers[0],'016b')
-        print(f"Successfully digital output 1~16 : {a}")
+#     result = client.read_holding_registers(1)
+#     if result.isError():
+#         print("Error writing to holding register")
+#     else:
+#         print(f"Successfully wrote to holding register : {result.registers}")
+#         print(f"Successfully digital output 1~16 : {bin(result.registers[0])}")
+#         a=format(result.registers[0],'016b')
+#         print(f"Successfully digital output 1~16 : {a}")
 
-    # rsult = client.write_registers(1)
-    # if result.isError():
-    #     print("Error writing to holding register")
-    # else:
-    #     print(f"Successfully wrote to holding register : {result}")
+#     # rsult = client.write_registers(1)
+#     # if result.isError():
+#     #     print("Error writing to holding register")
+#     # else:
+#     #     print(f"Successfully wrote to holding register : {result}")
 
-    # 클라이언트 연결 종료
-    client.close()
-    print("Connection closed")
-else:
-    print("Unable to connect to the robot")
+#     # 클라이언트 연결 종료
+#     client.close()
+#     print("Connection closed")
+# else:
+#     print("Unable to connect to the robot")
 
