@@ -1,4 +1,4 @@
-from pprint import pprint
+
 from pymodbus.client import ModbusTcpClient
 import time
 
@@ -10,116 +10,74 @@ modbus_port = 502  # Modbus TCP 기본 포트
 client = ModbusTcpClient(robot_ip, port=modbus_port)
 
 
-#wclient.connect()
-# 클라이언트 연결
-# if client.connect():
-#     print("Connected to the robot")
+# 로봇 상태 리스트 및 다음 행동 목록
+robot_action_dic = {'robot_off' : {
+                        'current_state' : [0,0,0,0,0],
+                        'next_action' : ['power_on', [0, True]]
+                        },
+                    'robot_on' : {
+                        'current_state' : [3,0,0,0,0],
+                        'next_action' : ['script_start',[1,False]]
+                        },
+                    'robot_running' : {
+                        'current_state' : [3,1,1,0,0],
+                        'next_action' : ['manual_on',[2,True]]
+                        },
+                    'ss2' : {
+                        'current_state' : [5,3,3,0,0],
+                        'next_action' : ['error_off',[3,False]]
+                        }
+                    }
 
+# 로봇의 현재 상태 체크 ( read_holding_register )
+def check_robot():
+    current_state_dic = [list(format(client.read_holding_registers(1, 1, 1).registers[0], '016b'))[::-1], # "digital_output"
+                        list(format(client.read_holding_registers(0, 1, 1).registers[0], '016b'))[::-1], #"digital_input"
+                        client.read_holding_registers(259, 1, 1).registers[0], #"robot_state"
+                        client.read_holding_registers(260, 1, 1).registers[0], #"servo_on_robot"
+                        client.read_holding_registers(261, 1, 1).registers[0], #"emergency_stopped"
+                        client.read_holding_registers(262, 1, 1).registers[0], #"safety_stopped"
+                        client.read_holding_registers(263, 1, 1).registers[0], #"direct_teach_button_pressed"
+                        client.read_holding_registers(264, 1, 1).registers[0] #"power_button_pressed"
+                        ]
+    current_state_arr = []
+    for a in current_state_dic:
+        current_state_arr.add(a)
+    return current_state_arr
 
-#     # ---------------------------coil-----------------------------------
-#     # Coil (디지털 출력) 제어 예제: 1번 핀을 HIGH로 설정
-#     coil_address = 129  # 제어할 Coil의 주소
-#     value = True  # HIGH로 설정
+# 로봇의 상태 변경 ( write_coil )
+def write_coil(robot_action_dic, robot_state):
+    print(f'current state = {robot_state}\ncommand action : {robot_action_dic[robot_state]["next_action"][0]}')
+    try:
+        write_coil = robot_action_dic[robot_state]['next_action'][1]
+        client.write_coil(write_coil)
+        return True
+    except:
+        return False
 
-#     # # Coil 제어 (쓰기)
-#     # result = client.write_coil(coil_address, True)
-#     # if result.isError():
-#     #    print("Error writing to coil")
-#     # else:
-#     #    print(f"Successfully wrote to coil {coil_address}, {result}")
+# 로봇의 현 상태 확인 후 until_state까지 상태 변경
+def action_robot2(robot_action_dic, until_state):
 
-#     # # Coil 읽기 (확인)
-#     # result = client.read_coils(coil_address, 1)
-#     # if result.isError():
-#     #     print("Error reading coil")
-#     # else:
-#     #     print(f"Coil {coil_address} value: {result} {result.bits[0]}")
-#     # # -------------------------------------------------------------------------------
+    while True:
+        target_state = check_robot()
+        matching_keys = [key for key, value in robot_action_dic.items() if value['current_state'] == target_state]
+        robot_state = ''
+        for key in matching_keys:
+            robot_state = key
+        if robot_state == until_state:
+            break
+        else:
+            # case문을 통해 본인의 state부터 순차 실행
+            match robot_state:
+                case 'ss2':
+                    pass
+                case 'robot_off':
+                    write_coil(robot_action_dic,robot_state)
+                case 'robot_on':
+                    pass
+                case 'servo_on':
+                    pass
 
-#     # Holding Register
-#     result = client.read_holding_registers(259,1,1)
-#     if result.isError():
-#         print("Error writing to holding register")
-#     else:
-#         print(f"Successfully wrote to holding register : {result.registers}")
+        return 'robot ready'
 
-#     result = client.read_holding_registers(1)
-#     if result.isError():
-#         print("Error writing to holding register")
-#     else:
-#         print(f"Successfully wrote to holding register : {result.registers}")
-#         print(f"Successfully digital output 1~16 : {bin(result.registers[0])}")
-#         a=format(result.registers[0],'016b')
-#         print(f"Successfully digital output 1~16 : {a}")
-
-#     '''
-#     result = client.write_registers(1)
-#     if result.isError():
-#         print("Error writing to holding register")
-#     else:
-#         print(f"Successfully wrote to holding register : {result}")
-#     '''
-
-#     # 클라이언트 연결
-#     client.close()
-#     print("Connection closed")
-# else:
-#     print("Unable to connect to the robot")
-
-#---------remote mode on------------
-#result = client.write_coil(16,True)
-#result = client.write_coil(17,True)
-
-
-#--------power on -> servo on -> task ready------------
-# result = client.write_coil(24,True)
-# result = client.write_coil(25,True)
-# result = client.write_coil(20,True)
-
-#--------task ready -> task run------------------
-# client.write_coil(22, True)
-# client.write_coil(21, False)
-# time.sleep(2)
-# client.write_coil(21, True)
-
-#------
-
-
-
-#result = client.write_coil(18,False)
-#result = client.write_coil(20,False)
-# print(result.isError())
-# print(list(format(client.read_holding_registers(1,1,1).registers[0],'016b'))[::-1])
-
-
-client.write_coil(24, False)
-client.write_coil(25, False)
-time.sleep(2)
-client.write_coil(16, False)
-client.write_coil(17, False)
-client.write_coil(20, False)
-# result = client.write_coil(20,True)
-# print(list(format(client.read_holding_registers(1,1,1).registers[0],'016b'))[::-1])
-
-#client.write_coil(21,True)
-#client.write_coil(19,True)
-
-time.sleep(2)
-
-if client.connect():
-    robot_state = {
-        "controlbox_state" : {
-            "digital_output" : list(format(client.read_holding_registers(1,1,1).registers[0],'016b'))[::-1],
-            "digital_input" : list(format(client.read_holding_registers(0,1,1).registers[0],'016b'))[::-1],
-            "robot_state" : client.read_holding_registers(259,1,1).registers[0],
-            "servo_on_robot" : client.read_holding_registers(260,1,1).registers[0],
-            "emergency_stopped" : client.read_holding_registers(261,1,1).registers[0],
-            "safety_stopped" : client.read_holding_registers(262,1,1).registers[0],
-            "direct_teach_button_pressed" : client.read_holding_registers(263,1,1).registers[0],
-            "power_button_pressed" : client.read_holding_registers(264,1,1).registers[0]
-        }
-
-    }
-    pprint(robot_state)
-    time.sleep(1)
-    
+action_robot2(robot_action_dic,'robot_running')
